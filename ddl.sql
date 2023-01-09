@@ -21,12 +21,12 @@ CREATE TABLE `users` (
   phone char(11) NOT NULL,
   password_hash char(65) DEFAULT NULL,
   created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP, 
-  type_users_id INT not NULL, 
+  type_users_id INT unsigned not NULL default 2, 
   PRIMARY KEY (`id`),
   UNIQUE KEY `email_idx` (`email`),
   UNIQUE KEY `phone_idx` (`phone`),
-  CONSTRAINT `phone_check` CHECK (regexp_like(`phone`,_utf8mb4'^[0-9]{11}$'))
-  #CONSTRAINT fk_users_type FOREIGN KEY (type_users_id) REFERENCES typeofusers (id)
+  CONSTRAINT `phone_check` CHECK (regexp_like(`phone`,_utf8mb4'^[0-9]{11}$')),
+  CONSTRAINT fk_users_type FOREIGN KEY (type_users_id) REFERENCES typeofusers (id)
 ) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- `at`.profiles definition
@@ -79,26 +79,87 @@ primary key (id)
 );
 insert into settings values (1, 1); 
 
+DROP TABLE IF EXISTS genre;
+CREATE TABLE genre (
+	`id` mediumint(8) unsigned NOT NULL,
+	`title` varchar(30) not NULL,
+	PRIMARY KEY (id));
+insert into genre values (1, 'фантастика'), (2, 'детектив'), (3, 'фентази'), (4, 'проза'); 
+
+DROP TABLE IF EXISTS sale;
+CREATE TABLE sale (
+	`id` mediumint(8) unsigned NOT NULL AUTO_INCREMENT,
+	`author_id` bigint unsigned NOT NULL,	
+	`title` varchar(30) not NULL,
+	`procent` mediumint(8) NOT NULL,
+	CONSTRAINT fk_sale_author FOREIGN KEY (author_id) REFERENCES users (id),
+	PRIMARY KEY (id));
+INSERT INTO `sale` (`author_id`,`title`,`procent`)
+VALUES
+	(1,"новогодняя",25),
+    (2,"новогодняя",20),
+	(2,"скидка 10%",10);
 
 DROP TABLE IF EXISTS books;
 CREATE TABLE books (
   `id` mediumint(8) unsigned NOT NULL auto_increment,
   `author_id` bigint unsigned NOT NULL,
+  `genre_id` mediumint(8) unsigned NOT NULL,  
   `title` TEXT default NULL,
   `text` TEXT default NULL,
   `price` mediumint default NULL,
+  `sale_id` mediumint(8) unsigned default NULL, 
   PRIMARY KEY (`id`),
-  CONSTRAINT fk_books_author FOREIGN KEY (author_id) REFERENCES users (id)
+  CONSTRAINT fk_books_author FOREIGN KEY (author_id) REFERENCES users (id),
+  CONSTRAINT fk_books_genre FOREIGN KEY (genre_id) REFERENCES genre (id),
+  CONSTRAINT fk_books_sale FOREIGN KEY (sale_id) REFERENCES sale (id)
 ) AUTO_INCREMENT=1 ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-INSERT INTO `books` (`author_id`,`title`,`text`,`price`)
+INSERT INTO `books` (`author_id`,`genre_id`,`title`,`text`,`price`, `sale_id`)
 VALUES
-  (2,"ultrices. Duis","Mauris molestie pharetra nibh. Aliquam ornare, libero at auctor ullamcorper, nisl arcu iaculis enim, sit amet ornare lectus justo eu arcu. Morbi sit amet massa. Quisque porttitor eros nec tellus. Nunc lectus pede, ultrices a, auctor non, feugiat nec, diam. Duis mi enim, condimentum",155),
-  (6,"augue","fringilla ornare placerat, orci lacus vestibulum lorem, sit amet ultricies",148),
-  (4,"ut lacus.","nec enim. Nunc ut erat. Sed nunc est, mollis non, cursus non, egestas a, dui. Cras pellentesque. Sed dictum. Proin eget odio. Aliquam vulputate ullamcorper magna. Sed eu eros. Nam consequat dolor vitae dolor. Donec fringilla. Donec feugiat metus sit amet ante. Vivamus non lorem vitae odio sagittis semper. Nam tempor diam dictum sapien. Aenean massa. Integer vitae nibh.",136),
-  (2,"facilisis facilisis,","luctus et ultrices posuere cubilia Curae Phasellus ornare. Fusce mollis. Duis sit amet diam eu dolor egestas rhoncus. Proin nisl sem, consequat nec, mollis vitae, posuere at, velit. Cras lorem lorem, luctus ut, pellentesque eget, dictum placerat, augue. Sed molestie. Sed id risus quis diam luctus lobortis. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per",115),
-  (5,"faucibus.","faucibus lectus, a sollicitudin orci sem eget massa. Suspendisse eleifend. Cras sed leo. Cras vehicula",103);
+  (2,2,"ultrices. Duis","Mauris molestie pharetra nibh. Aliquam ornare, libero at auctor ullamcorper, nisl arcu iaculis enim, sit amet ornare lectus justo eu arcu. Morbi sit amet massa. Quisque porttitor eros nec tellus. Nunc lectus pede, ultrices a, auctor non, feugiat nec, diam. Duis mi enim, condimentum",155, 2),
+  (6,3,"augue","fringilla ornare placerat, orci lacus vestibulum lorem, sit amet ultricies",148, null),
+  (4,4,"ut lacus.","nec enim. Nunc ut erat. Sed nunc est, mollis non, cursus non, egestas a, dui. Cras pellentesque. Sed dictum. Proin eget odio. Aliquam vulputate ullamcorper magna. Sed eu eros. Nam consequat dolor vitae dolor. Donec fringilla. Donec feugiat metus sit amet ante. Vivamus non lorem vitae odio sagittis semper. Nam tempor diam dictum sapien. Aenean massa. Integer vitae nibh.",136, null),
+  (2,2,"facilisis facilisis,","luctus et ultrices posuere cubilia Curae Phasellus ornare. Fusce mollis. Duis sit amet diam eu dolor egestas rhoncus. Proin nisl sem, consequat nec, mollis vitae, posuere at, velit. Cras lorem lorem, luctus ut, pellentesque eget, dictum placerat, augue. Sed molestie. Sed id risus quis diam luctus lobortis. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per",115, null),
+  (5,1,"faucibus.","faucibus lectus, a sollicitudin orci sem eget massa. Suspendisse eleifend. Cras sed leo. Cras vehicula",103, null);
  
- 
+
+DROP TABLE IF EXISTS status;
+CREATE TABLE status ( 
+ 	`id` mediumint(8) unsigned NOT NULL,		
+	`title` varchar(30) not NULL,
+	PRIMARY KEY (id));
+insert into status values (1, 'читаю'), (2, 'прочитано'), (3, 'отложить'), (4, 'не интересно');
+
+
+DROP TABLE IF EXISTS lib;
+CREATE TABLE lib (  
+  user_id bigint unsigned NOT NULL,
+  book_id mediumint(8) unsigned,
+  paid boolean default FALSE,
+  procent_paid mediumint(8) unsigned default 0,
+  status_id mediumint(8) unsigned default NULL, 
+  created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`user_id`, `book_id`),
+ CONSTRAINT fk_lib_status FOREIGN KEY (status_id) REFERENCES status (id),
+ CONSTRAINT fk_lib_users FOREIGN KEY (user_id) REFERENCES users (id), 
+ CONSTRAINT fk_lib_books FOREIGN KEY (book_id) REFERENCES books (id)  
+) AUTO_INCREMENT=1 ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+INSERT INTO lib (user_id, book_id, paid, procent_paid , status_id)
+VALUES
+  (1,1,1,100,2),
+  (1,2,0,0,3),
+  (1,3,0,0,4),
+  (2,2,1,50,1),
+  (2,3,1,100,2);
+  
+#SHOW ENGINES
+ CREATE TABLE IF NOT EXISTS `logs` (
+    book_id mediumint(8) unsigned,
+  	old_text Text default NULL,
+  	created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP   
+ ) ENGINE=ARCHIVE DEFAULT CHARSET=utf8;
 
 
